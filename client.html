@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Time Test</title>
+    <style>
+        #log { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; margin-bottom: 10px; }
+        #messageInput { width: 80%; padding: 8px; margin-right: 10px; }
+        #sendButton { padding: 8px 15px; }
+    </style>
+</head>
+<body>
+    <h1>AI ASSISTANT</h1>
+    <button onclick="connect()">Connect</button>
+    <button onclick="disconnect()">Disconnect</button>
+    <div style="margin: 10px 0;">
+        <input type="text" id="messageInput" placeholder="Type your message here...">
+        <button id="sendButton" onclick="sendMessageFromInput()">Send</button>
+    </div>
+    <div id="log"></div>
+
+    <script>
+        let socket;
+
+        function connect() {
+            socket = new WebSocket("ws://localhost:8888/ws");
+
+            socket.onopen = () => {
+                log("Connected to server");
+            };
+
+            socket.onmessage = (event) => {
+                log(`AI: ${event.data}`);
+            };
+
+            socket.onclose = () => {
+                log("Disconnected");
+            };
+
+            socket.onerror = (error) => {
+                log(`Error: ${error.message || "Unknown error"}`);
+            };
+        }
+
+        function disconnect() {
+            if (socket) socket.close();
+        }
+
+        // 修改后的发送函数（从输入框获取内容）
+        function sendMessageFromInput() {
+            const input = document.getElementById("messageInput");
+            const message = input.value.trim();
+            
+            if (message) {
+                sendMessage(message);
+                input.value = ""; // 清空输入框
+            } else {
+                log("Please enter a message!");
+            }
+        }
+
+        // 原有的发送函数（保留供其他调用）
+        function sendMessage(msg) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(msg);
+                log(`我: ${msg}`);
+            } else {
+                log("WebSocket is not connected!");
+            }
+        }
+
+        function log(message) {
+            const logDiv = document.getElementById("log");
+            logDiv.innerHTML += `<p>${message}</p>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // 可选：按 Enter 键发送消息
+        document.getElementById("messageInput").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                sendMessageFromInput();
+            }
+        });
+    </script>
+</body>
+</html>
